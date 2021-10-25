@@ -25,7 +25,7 @@
             die("Connection failed: " . $conn->connect_error);
         }
         $sql = "select * from session INNER JOIN location on session.location = location.location\n"
-        . "WHERE `dayofweek` = 6\n"
+        . "WHERE `dayofweek` = $dayNum\n"
         . "ORDER BY `session`.`begintime` ASC";
         $result = $conn->query($sql);
         if ($result->num_rows > 0) {

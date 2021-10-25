@@ -3,52 +3,56 @@
 require_once "config.php";
  
 // Define variables and initialize with empty values
-$name = $address = $salary = "";
-$name_err = $address_err = $salary_err = "";
+$location = $dayofweek = $opentime = $closetime = "";
+$location_err = $dayofweek_err = $opentime_err = $closetime_err = "";
  
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
-    // Validate name
-    $input_name = trim($_POST["name"]);
-    if(empty($input_name)){
-        $name_err = "Please enter a name.";
-    } elseif(!filter_var($input_name, FILTER_VALIDATE_REGEXP, array("options"=>array("regexp"=>"/^[a-zA-Z\s]+$/")))){
-        $name_err = "Please enter a valid name.";
-    } else{
-        $name = $input_name;
+    //Print post data
+    print_r($_POST);
+    // Example $_POST data: Array ( [location] => 1 [dayofweek] => 1 [opentime] => 05:00 [closetime] => 06:00 )
+    $location = trim($_POST["location"]);
+    $dayofweek = trim($_POST["dayofweek"]);
+
+    // Validate Opening Time
+    $opentime = trim($_POST["opentime"]);
+    if($opentime == ""){
+        $opentime_err = "Please enter opening time.";     
     }
-    
-    // Validate address
-    $input_address = trim($_POST["address"]);
-    if(empty($input_address)){
-        $address_err = "Please enter an address.";     
-    } else{
-        $address = $input_address;
+    // Validate Closing Time
+    $closetime = trim($_POST["closetime"]);
+    if($closetime == ""){
+        $closetime_err = "Please enter closing time.";     
     }
-    
-    // Validate salary
-    $input_salary = trim($_POST["salary"]);
-    if(empty($input_salary)){
-        $salary_err = "Please enter the salary amount.";     
-    } elseif(!ctype_digit($input_salary)){
-        $salary_err = "Please enter a positive integer value.";
-    } else{
-        $salary = $input_salary;
+    if(strtotime($closetime) < strtotime($opentime)){
+        $closetime_err = "Closing time must be after opening time.";
     }
+
+    //Convert open and close times to HHMM format for database. 
+    $opentime = date("Hi", strtotime($opentime));
+    $closetime = date("Hi", strtotime($closetime));
     
     // Check input errors before inserting in database
-    if(empty($name_err) && empty($address_err) && empty($salary_err)){
+    if($location_err == "" && $dayofweek_err == "" && $opentime_err == "" && $closetime_err == ""){
         // Prepare an insert statement
-        $sql = "INSERT INTO employees (name, address, salary) VALUES (?, ?, ?)";
+        $sql = "INSERT INTO `session` (`sessnum`, `location`, `dayofweek`, `begintime`, `endtime`) VALUES (null,?,?,?,?)";
          
         if($stmt = mysqli_prepare($link, $sql)){
             // Bind variables to the prepared statement as parameters
-            mysqli_stmt_bind_param($stmt, "sss", $param_name, $param_address, $param_salary);
+            mysqli_stmt_bind_param($stmt, "ssss", $param_location, $param_dayofweek, $param_opentime, $param_closetime);
             
             // Set parameters
-            $param_name = $name;
-            $param_address = $address;
-            $param_salary = $salary;
+            $param_location = $location;
+            $param_dayofweek = $dayofweek;
+            $param_opentime = $opentime;
+            $param_closetime = $closetime;
+
+            //Print parameters
+            print("<br>Location: $param_location");
+            print("<br>Day of Week: $param_dayofweek");
+            print("<br>Opening Time: $param_opentime");
+            print("<br>Closing Time: $param_closetime");
+
             
             // Attempt to execute the prepared statement
             if(mysqli_stmt_execute($stmt)){
@@ -56,6 +60,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 header("location: index.php");
                 exit();
             } else{
+                //Log Error
                 echo "Oops! Something went wrong. Please try again later.";
             }
         }
@@ -64,9 +69,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         mysqli_stmt_close($stmt);
     }
     
-    // Close connection
-    mysqli_close($link);
 }
+
 ?>
  
 <!DOCTYPE html>
@@ -87,23 +91,52 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12">
-                    <h2 class="mt-5">Create Record</h2>
-                    <p>Please fill this form and submit to add employee record to the database.</p>
+                    <h2 class="mt-5">Create Session</h2>
+                    <p>Please fill this form and submit to add session record to the database.</p>
                     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                         <div class="form-group">
-                            <label>Name</label>
-                            <input type="text" name="name" class="form-control <?php echo (!empty($name_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $name; ?>">
-                            <span class="invalid-feedback"><?php echo $name_err;?></span>
+                            <label>Location</label>
+                            <!-- HTML select generated from location table in database. All `l-name` values in the table are displayed 
+                            as options in the select menu. The `location` number is the POST value. -->
+                            <?php
+                                $sql = "SELECT * FROM `location`";
+                                $result = mysqli_query($link, $sql);
+                                echo "<select class='form-control' name='location'>";
+                                while($row = mysqli_fetch_array($result)){
+                                    if($row['location'] == $location){
+                                        echo "<option value='" . $row['location'] . "' selected>" . $row['l-name'] . "</option>";
+                                    } else{
+                                        echo "<option value='" . $row['location'] . "'>" . $row['l-name'] . "</option>";
+                                    }
+                                }
+                                echo "</select>";
+                            ?>
+                            <span class="text-danger"><?php echo $location_err;?></span>
                         </div>
                         <div class="form-group">
-                            <label>Address</label>
-                            <textarea name="address" class="form-control <?php echo (!empty($address_err)) ? 'is-invalid' : ''; ?>"><?php echo $address; ?></textarea>
-                            <span class="invalid-feedback"><?php echo $address_err;?></span>
+                            <label>Day Of Week</label>
+                            <!-- HTML select where the days of week are displayed as options. Numbers are sent to server as POST values.
+                            Where Sunday = 1, Monday = 2, ... Saturday = 7 -->
+                            <?php
+                                echo "<select class='form-control' name='dayofweek'>";
+                                $daysOfWeek = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
+                                for($i = 1; $i <= 7; $i++){
+                                    $selected = ($i == $dayofweek) ? "selected" : "";
+                                    echo "<option value='" . $i . "' $selected>" . $daysOfWeek[$i-1] . "</option>";
+                                }
+                                echo "</select>";
+                            ?>
+                            <span class="text-danger"><?php echo $dayofweek_err;?></span>
                         </div>
                         <div class="form-group">
-                            <label>Salary</label>
-                            <input type="text" name="salary" class="form-control <?php echo (!empty($salary_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $salary; ?>">
-                            <span class="invalid-feedback"><?php echo $salary_err;?></span>
+                            <label>Open Time</label>
+                            <input type="time" name="opentime" class="form-control" step='1800' value="<?php echo $opentime; ?>">
+                            <span class="text-danger"><?php echo $opentime_err;?></span>
+                        </div>
+                        <div class="form-group">
+                            <label>Close Time</label>
+                            <input type="time" name="closetime" class="form-control" value="<?php echo $closetime; ?>">
+                            <span class="text-danger"><?php echo $closetime_err;?></span>
                         </div>
                         <input type="submit" class="btn btn-primary" value="Submit">
                         <a href="index.php" class="btn btn-secondary ml-2">Cancel</a>
@@ -114,3 +147,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     </div>
 </body>
 </html>
+<?php
+    mysqli_close($link);
+?>
