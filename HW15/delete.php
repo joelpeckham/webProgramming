@@ -1,4 +1,9 @@
 <?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit;
+}
 // Process delete operation after confirmation
 if(isset($_POST["sessnum"]) && !empty($_POST["sessnum"])){
     // Include config file

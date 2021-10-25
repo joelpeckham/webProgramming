@@ -1,3 +1,7 @@
+<?php
+session_start();
+$authenticated = isset($_SESSION['user']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,13 +28,16 @@
     </script>
 </head>
 <body>
+    <?php include 'nav.php'; ?>
     <div class="wrapper">
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12">
                     <div class="mt-5 mb-3 clearfix">
-                        <h2 class="pull-left">Screening Sessions</h2>
-                        <a href="create.php" class="btn btn-success pull-right"><i class="fa fa-plus"></i> New Session</a>
+                        <h2 class="pull-left">Today's Sessions</h2>
+                        <?php if($authenticated){
+                            echo '<a href="create.php" class="btn btn-success pull-right"><i class="fa fa-plus"></i> New Session</a>';
+                        } ?>
                     </div>
                     <?php
                     // Include config file
@@ -54,7 +61,7 @@
                                         echo "<th>Location</th>";
                                         echo "<th>Open</th>";
                                         echo "<th>Close</th>";
-                                        echo "<th>Action</th>";
+                                        if ($authenticated) {echo "<th>Action</th>";}
                                     echo "</tr>";
                                 echo "</thead>";
                                 echo "<tbody>";
@@ -62,13 +69,15 @@
                                     $currentlyOpen = ($currentTime >= $row['begintime'] && $currentTime <= $row['endtime']) ? "style='font-weight:bold'" : "";
                                     echo "<tr>";
                                         echo "<td $currentlyOpen>" . $row['l-name'] . "</td>";
-                                        echo "<td $currentlyOpen>" . $row['begintime'] . "</td>";
-                                        echo "<td $currentlyOpen>" . $row['endtime'] . "</td>";
-                                        echo "<td>";
+                                        echo "<td $currentlyOpen align='right' char=':'>" . datetime::createfromformat('Hi', str_pad(strval($row["begintime"]), 4, '0', STR_PAD_LEFT))->format('h:i A') . "</td>";
+                                        echo "<td $currentlyOpen align='right' char=':'>" . datetime::createfromformat('Hi', str_pad(strval($row["endtime"]), 4, '0', STR_PAD_LEFT))->format('h:i A') . "</td>";
+                                        if ($authenticated){
+                                            echo "<td>";
                                             // echo '<a href="read.php?sessnum='. $row['sessnum'] .'" class="mr-3" title="View Record" data-toggle="tooltip"><span class="fa fa-eye"></span></a>';
                                             echo '<a href="update.php?sessnum='. $row['sessnum'] .'" class="mr-3" title="Update Record" data-toggle="tooltip"><span class="fa fa-pencil"></span></a>';
                                             echo '<a href="delete.php?sessnum='. $row['sessnum'] .'" title="Delete Record" data-toggle="tooltip"><span class="fa fa-trash"></span></a>';
-                                        echo "</td>";
+                                            echo "</td>";
+                                        }
                                     echo "</tr>";
                                 }
                                 echo "</tbody>";                            
