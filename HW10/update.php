@@ -3,56 +3,47 @@
 require_once "config.php";
  
 // Define variables and initialize with empty values
-$name = $address = $salary = "";
-$name_err = $address_err = $salary_err = "";
+$location = $dayofweek = $opentime = $closetime = "";
+$location_err = $dayofweek_err = $opentime_err = $closetime_err = "";
  
 // Processing form data when form is submitted
-if(isset($_POST["id"]) && !empty($_POST["id"])){
+if(isset($_POST["sessnum"]) && !empty($_POST["sessnum"])){
     // Get hidden input value
-    $id = $_POST["id"];
+    $sessnum = $_POST["sessnum"];
     
-    // Validate name
-    $input_name = trim($_POST["name"]);
-    if(empty($input_name)){
-        $name_err = "Please enter a name.";
-    } elseif(!filter_var($input_name, FILTER_VALIDATE_REGEXP, array("options"=>array("regexp"=>"/^[a-zA-Z\s]+$/")))){
-        $name_err = "Please enter a valid name.";
-    } else{
-        $name = $input_name;
+    // Example $_POST data: Array ( [location] => 1 [dayofweek] => 1 [opentime] => 05:00 [closetime] => 06:00 )
+    $location = trim($_POST["location"]);
+    $dayofweek = trim($_POST["dayofweek"]);
+
+    // Validate Opening Time
+    $opentime = trim($_POST["opentime"]);
+    if($opentime == ""){
+        $opentime_err = "Please enter opening time.";     
     }
-    
-    // Validate address address
-    $input_address = trim($_POST["address"]);
-    if(empty($input_address)){
-        $address_err = "Please enter an address.";     
-    } else{
-        $address = $input_address;
+    // Validate Closing Time
+    $closetime = trim($_POST["closetime"]);
+    if($closetime == ""){
+        $closetime_err = "Please enter closing time.";     
     }
-    
-    // Validate salary
-    $input_salary = trim($_POST["salary"]);
-    if(empty($input_salary)){
-        $salary_err = "Please enter the salary amount.";     
-    } elseif(!ctype_digit($input_salary)){
-        $salary_err = "Please enter a positive integer value.";
-    } else{
-        $salary = $input_salary;
+    if(strtotime($closetime) < strtotime($opentime)){
+        $closetime_err = "Closing time must be after opening time.";
     }
     
     // Check input errors before inserting in database
-    if(empty($name_err) && empty($address_err) && empty($salary_err)){
+    if($location_err == "" && $dayofweek_err == "" && $opentime_err == "" && $closetime_err == ""){
         // Prepare an update statement
-        $sql = "UPDATE employees SET name=?, address=?, salary=? WHERE id=?";
+        $sql = "UPDATE `session` SET `location`=?, `dayofweek`=?, `begintime`=?, `endtime`=? WHERE sessnum=?";
          
         if($stmt = mysqli_prepare($link, $sql)){
             // Bind variables to the prepared statement as parameters
-            mysqli_stmt_bind_param($stmt, "sssi", $param_name, $param_address, $param_salary, $param_id);
+            mysqli_stmt_bind_param($stmt, "iiiii", $param_location, $param_dayofweek, $param_opentime, $param_closetime, $param_sessnum);
             
             // Set parameters
-            $param_name = $name;
-            $param_address = $address;
-            $param_salary = $salary;
-            $param_id = $id;
+            $param_location = $location;
+            $param_dayofweek = $dayofweek;
+            $param_opentime = date("Hi", strtotime($opentime));
+            $param_closetime = date("Hi", strtotime($closetime));
+            $param_sessnum = $sessnum;
             
             // Attempt to execute the prepared statement
             if(mysqli_stmt_execute($stmt)){
@@ -67,23 +58,20 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
         // Close statement
         mysqli_stmt_close($stmt);
     }
-    
-    // Close connection
-    mysqli_close($link);
 } else{
     // Check existence of id parameter before processing further
-    if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
+    if(isset($_GET["sessnum"]) && !empty(trim($_GET["sessnum"]))){
         // Get URL parameter
-        $id =  trim($_GET["id"]);
+        $sessnum =  trim($_GET["sessnum"]);
         
         // Prepare a select statement
-        $sql = "SELECT * FROM employees WHERE id = ?";
+        $sql = "SELECT * FROM `session` WHERE `sessnum` = ?";
         if($stmt = mysqli_prepare($link, $sql)){
             // Bind variables to the prepared statement as parameters
-            mysqli_stmt_bind_param($stmt, "i", $param_id);
+            mysqli_stmt_bind_param($stmt, "i", $param_sessnum);
             
             // Set parameters
-            $param_id = $id;
+            $param_sessnum = $sessnum;
             
             // Attempt to execute the prepared statement
             if(mysqli_stmt_execute($stmt)){
@@ -93,11 +81,12 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
                     /* Fetch result row as an associative array. Since the result set
                     contains only one row, we don't need to use while loop */
                     $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
-                    
                     // Retrieve individual field value
-                    $name = $row["name"];
-                    $address = $row["address"];
-                    $salary = $row["salary"];
+                    $location = $row["location"];
+                    $dayofweek = $row["dayofweek"];
+                    $opentime = datetime::createfromformat('Hi', str_pad(strval($row["begintime"]), 4, '0', STR_PAD_LEFT))->format('H:i');
+                    $closetime = datetime::createfromformat('Hi', str_pad(strval($row["endtime"]), 4, '0', STR_PAD_LEFT))->format('H:i');
+    
                 } else{
                     // URL doesn't contain valid id. Redirect to error page
                     header("location: error.php");
@@ -111,9 +100,6 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
         
         // Close statement
         mysqli_stmt_close($stmt);
-        
-        // Close connection
-        mysqli_close($link);
     }  else{
         // URL doesn't contain id parameter. Redirect to error page
         header("location: error.php");
@@ -126,7 +112,7 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Update Record</title>
+    <title>Update Session</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         .wrapper{
@@ -140,25 +126,52 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12">
-                    <h2 class="mt-5">Update Record</h2>
-                    <p>Please edit the input values and submit to update the employee record.</p>
+                    <h2 class="mt-5">Update Session</h2>
+                    <p>Please edit the input values and submit to update the session record.</p>
                     <form action="<?php echo htmlspecialchars(basename($_SERVER['REQUEST_URI'])); ?>" method="post">
                         <div class="form-group">
-                            <label>Name</label>
-                            <input type="text" name="name" class="form-control <?php echo (!empty($name_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $name; ?>">
-                            <span class="invalid-feedback"><?php echo $name_err;?></span>
+                            <label>Location</label>
+                            <!-- HTML select generated from location table in database. All `l-name` values in the table are displayed 
+                            as options in the select menu. The `location` number is the POST value. -->
+                            <?php
+                                $sql = "SELECT * FROM `location`";
+                                $result = mysqli_query($link, $sql);
+                                echo "<select class='form-control' name='location'>";
+                                while($row = mysqli_fetch_array($result)){
+                                    if($row['location'] == $location){
+                                        echo "<option value='" . $row['location'] . "' selected>" . $row['l-name'] . "</option>";
+                                    } else{
+                                        echo "<option value='" . $row['location'] . "'>" . $row['l-name'] . "</option>";
+                                    }
+                                }
+                                echo "</select>";
+                            ?>
+                            <span class="text-danger"><?php echo $location_err;?></span>
                         </div>
                         <div class="form-group">
-                            <label>Address</label>
-                            <textarea name="address" class="form-control <?php echo (!empty($address_err)) ? 'is-invalid' : ''; ?>"><?php echo $address; ?></textarea>
-                            <span class="invalid-feedback"><?php echo $address_err;?></span>
+                            <label>Day Of Week</label>
+                            <?php
+                                echo "<select class='form-control' name='dayofweek'>";
+                                $daysOfWeek = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
+                                for($i = 1; $i <= 7; $i++){
+                                    $selected = ($i == $dayofweek) ? "selected" : "";
+                                    echo "<option value='" . $i . "' $selected>" . $daysOfWeek[$i-1] . "</option>";
+                                }
+                                echo "</select>";
+                            ?>
+                            <span class="text-danger"><?php echo $dayofweek_err;?></span>
                         </div>
                         <div class="form-group">
-                            <label>Salary</label>
-                            <input type="text" name="salary" class="form-control <?php echo (!empty($salary_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $salary; ?>">
-                            <span class="invalid-feedback"><?php echo $salary_err;?></span>
+                            <label>Open Time</label>
+                            <input type="time" name="opentime" class="form-control" value="<?php echo $opentime; ?>">
+                            <span class="text-danger"><?php echo $opentime_err;?></span>
                         </div>
-                        <input type="hidden" name="id" value="<?php echo $id; ?>"/>
+                        <div class="form-group">
+                            <label>Close Time</label>
+                            <input type="time" name="closetime" class="form-control" value="<?php echo $closetime; ?>">
+                            <span class="text-danger"><?php echo $closetime_err;?></span>
+                        </div>
+                        <input type="hidden" name="sessnum" value="<?php echo $sessnum; ?>"/>
                         <input type="submit" class="btn btn-primary" value="Submit">
                         <a href="index.php" class="btn btn-secondary ml-2">Cancel</a>
                     </form>
@@ -168,3 +181,7 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
     </div>
 </body>
 </html>
+<?php
+// Close connection
+mysqli_close($link);
+?>

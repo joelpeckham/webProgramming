@@ -28,10 +28,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         $closetime_err = "Closing time must be after opening time.";
     }
 
-    //Convert open and close times to HHMM format for database. 
-    $opentime = date("Hi", strtotime($opentime));
-    $closetime = date("Hi", strtotime($closetime));
-    
     // Check input errors before inserting in database
     if($location_err == "" && $dayofweek_err == "" && $opentime_err == "" && $closetime_err == ""){
         // Prepare an insert statement
@@ -39,21 +35,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
          
         if($stmt = mysqli_prepare($link, $sql)){
             // Bind variables to the prepared statement as parameters
-            mysqli_stmt_bind_param($stmt, "ssss", $param_location, $param_dayofweek, $param_opentime, $param_closetime);
+            mysqli_stmt_bind_param($stmt, "iiii", $param_location, $param_dayofweek, $param_opentime, $param_closetime);
             
             // Set parameters
             $param_location = $location;
             $param_dayofweek = $dayofweek;
-            $param_opentime = $opentime;
-            $param_closetime = $closetime;
+            $param_opentime = date("Hi", strtotime($opentime));
+            $param_closetime = date("Hi", strtotime($closetime));
 
-            //Print parameters
-            print("<br>Location: $param_location");
-            print("<br>Day of Week: $param_dayofweek");
-            print("<br>Opening Time: $param_opentime");
-            print("<br>Closing Time: $param_closetime");
-
-            
             // Attempt to execute the prepared statement
             if(mysqli_stmt_execute($stmt)){
                 // Records created successfully. Redirect to landing page
@@ -130,7 +119,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                         </div>
                         <div class="form-group">
                             <label>Open Time</label>
-                            <input type="time" name="opentime" class="form-control" step='1800' value="<?php echo $opentime; ?>">
+                            <input type="time" name="opentime" class="form-control" value="<?php echo $opentime; ?>">
                             <span class="text-danger"><?php echo $opentime_err;?></span>
                         </div>
                         <div class="form-group">
