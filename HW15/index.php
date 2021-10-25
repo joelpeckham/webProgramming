@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>HW10 - Joel Peckham</title>
+    <title>HW15 - Joel Peckham</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -29,7 +29,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="mt-5 mb-3 clearfix">
-                        <h2 class="pull-left">Check Sessions</h2>
+                        <h2 class="pull-left">Screening Sessions</h2>
                         <a href="create.php" class="btn btn-success pull-right"><i class="fa fa-plus"></i> New Session</a>
                     </div>
                     <?php

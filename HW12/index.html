@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HW12 - Joel Peckham</title>
+</head>
+<body>
+<h1>HW12 - Joel Peckham</h1>
+<h3>This homework can be checked as part of Homework 15.</h3>
+<p>Redirecting to <a href="/jpeckham/HW15/">Homework 15</a> in <span id="time">10</span> seconds.</p>
+<script>
+    var time = 10;
+    var interval = setInterval(function () {
+        time--;
+        document.getElementById("time").innerHTML = time;
+        if (time <= 0) {
+            clearInterval(interval);
+            window.location.href = "/jpeckham/HW15/";
+        }
+    }, 1000);
+</script>
+</body>
+</html>
