@@ -35,7 +35,7 @@ $authenticated = isset($_SESSION['user']);
             <div class="row">
                 <div class="col-md-12">
                     <div class="mt-5 mb-3 clearfix">
-                        <h2 class="pull-left">Today's Sessions</h2>
+                        <h2 class="pull-left">All Sessions</h2>
                         <?php if($authenticated){
                             echo '<a href="create.php" class="btn btn-success pull-right"><i class="fa fa-plus"></i> New Session</a>';
                         } ?>
@@ -43,33 +43,29 @@ $authenticated = isset($_SESSION['user']);
                     <?php
                     // Include config file
                     require_once "config.php";
-                    $dayNum = date('N');
-                    if ($dayNum == 7) {
-                        $dayNum = 1;
-                    } else {
-                        $dayNum++;
-                    }
                     $currentTime = intval(date('Hi'));
                     // Attempt select query execution
                     $sql = "select * from session INNER JOIN location on session.location = location.location\n"
-                    . "WHERE `dayofweek` = $dayNum\n"
-                    . "ORDER BY `session`.`begintime` ASC";
+                    . "ORDER BY `session`.`dayofweek` ASC, `session`.`begintime` ASC";
                     if($result = mysqli_query($link, $sql)){
                         if(mysqli_num_rows($result) > 0){
                             echo '<table class="table table-bordered table-striped">';
                                 echo "<thead>";
                                     echo "<tr>";
                                         echo "<th>Location</th>";
+                                        echo "<th>Day</th>";
                                         echo "<th>Open</th>";
                                         echo "<th>Close</th>";
                                         if ($authenticated) {echo "<th>Action</th>";}
                                     echo "</tr>";
                                 echo "</thead>";
                                 echo "<tbody>";
+                                $WeekDays = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
                                 while($row = mysqli_fetch_array($result)){
                                     $currentlyOpen = ($currentTime >= $row['begintime'] && $currentTime <= $row['endtime']) ? "style='font-weight:bold'" : "";
                                     echo "<tr>";
                                         echo "<td $currentlyOpen>" . $row['l-name'] . "</td>";
+                                        echo "<td $currentlyOpen>" . $WeekDays[$row['dayofweek']-1] . "</td>";
                                         echo "<td $currentlyOpen align='right' char=':'>" . datetime::createfromformat('Hi', str_pad(strval($row["begintime"]), 4, '0', STR_PAD_LEFT))->format('h:i A') . "</td>";
                                         echo "<td $currentlyOpen align='right' char=':'>" . datetime::createfromformat('Hi', str_pad(strval($row["endtime"]), 4, '0', STR_PAD_LEFT))->format('h:i A') . "</td>";
                                         if ($authenticated){

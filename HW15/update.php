@@ -1,5 +1,6 @@
 <?php
 session_start();
+$back = isset($_SESSION['returnFile']) ? $_SESSION['returnFile'] : "index.php";
 if (!isset($_SESSION['user'])) {
     header("Location: login.php");
     exit;
@@ -53,7 +54,7 @@ if(isset($_POST["sessnum"]) && !empty($_POST["sessnum"])){
             // Attempt to execute the prepared statement
             if(mysqli_stmt_execute($stmt)){
                 // Records updated successfully. Redirect to landing page
-                header("location: index.php");
+                header("location: $back");
                 exit();
             } else{
                 echo "Oops! Something went wrong. Please try again later.";
@@ -127,6 +128,7 @@ if(isset($_POST["sessnum"]) && !empty($_POST["sessnum"])){
     </style>
 </head>
 <body>
+<?php include 'nav.php'; ?>
     <div class="wrapper">
         <div class="container-fluid">
             <div class="row">
@@ -178,7 +180,7 @@ if(isset($_POST["sessnum"]) && !empty($_POST["sessnum"])){
                         </div>
                         <input type="hidden" name="sessnum" value="<?php echo $sessnum; ?>"/>
                         <input type="submit" class="btn btn-primary" value="Submit">
-                        <a href="index.php" class="btn btn-secondary ml-2">Cancel</a>
+                        <a href="<?php echo $back;?>" class="btn btn-secondary ml-2">Cancel</a>
                     </form>
                 </div>
             </div>        

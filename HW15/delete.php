@@ -1,5 +1,6 @@
 <?php
 session_start();
+$back = isset($_SESSION['returnFile']) ? $_SESSION['returnFile'] : "index.php";
 if (!isset($_SESSION['user'])) {
     header("Location: login.php");
     exit;
@@ -22,7 +23,7 @@ if(isset($_POST["sessnum"]) && !empty($_POST["sessnum"])){
         // Attempt to execute the prepared statement
         if(mysqli_stmt_execute($stmt)){
             // Records deleted successfully. Redirect to landing page
-            header("location: index.php");
+            header("location: $back");
             exit();
         } else{
             echo "Oops! Something went wrong. Please try again later.";
@@ -58,6 +59,7 @@ if(isset($_POST["sessnum"]) && !empty($_POST["sessnum"])){
     </style>
 </head>
 <body>
+<?php include 'nav.php'; ?>
     <div class="wrapper">
         <div class="container-fluid">
             <div class="row">
@@ -69,7 +71,7 @@ if(isset($_POST["sessnum"]) && !empty($_POST["sessnum"])){
                             <p>Are you sure you want to delete this session record?</p>
                             <p>
                                 <input type="submit" value="Yes" class="btn btn-danger">
-                                <a href="index.php" class="btn btn-secondary">No</a>
+                                <a href="<?php echo $back;?>" class="btn btn-secondary">No</a>
                             </p>
                         </div>
                     </form>

@@ -2,8 +2,9 @@
     session_start();
     $loginFailed = false;
     use PHPMailer\PHPMailer\PHPMailer;
+    $back = isset($_SESSION['returnFile']) ? $_SESSION['returnFile'] : "index.php";
     if(isset($_SESSION['user'])){
-        header("Location: index.php");
+        header("Location: $back");
     }
     if(isset($_POST['email']) && isset($_POST['password'])){
         require 'phpMailer/PHPMailer.php';
@@ -27,7 +28,7 @@
             $mail->smtpClose();
            // set session variables
             $_SESSION['user'] = $_POST['email'];
-            header("Location: index.php");
+            header("Location: $back");
         }
         else{
             $loginFailed = true;
