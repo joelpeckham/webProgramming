@@ -70,8 +70,8 @@ $authenticated = isset($_SESSION['user']);
                                     $currentlyOpen = ($currentTime >= $row['begintime'] && $currentTime <= $row['endtime']) ? "style='font-weight:bold'" : "";
                                     echo "<tr>";
                                         echo "<td $currentlyOpen>" . $row['l-name'] . "</td>";
-                                        echo "<td $currentlyOpen align='right' char=':'>" . datetime::createfromformat('Hi', str_pad(strval($row["begintime"]), 4, '0', STR_PAD_LEFT))->format('h:i A') . "</td>";
-                                        echo "<td $currentlyOpen align='right' char=':'>" . datetime::createfromformat('Hi', str_pad(strval($row["endtime"]), 4, '0', STR_PAD_LEFT))->format('h:i A') . "</td>";
+                                        echo "<td $currentlyOpen align='right' char=':'>" . datetime::createfromformat('Hi', str_pad(strval($row["begintime"]), 4, '0', STR_PAD_LEFT))->format('g:i A') . "</td>";
+                                        echo "<td $currentlyOpen align='right' char=':'>" . datetime::createfromformat('Hi', str_pad(strval($row["endtime"]), 4, '0', STR_PAD_LEFT))->format('g:i A') . "</td>";
                                         if ($authenticated){
                                             echo "<td>";
                                             // echo '<a href="read.php?sessnum='. $row['sessnum'] .'" class="mr-3" title="View Record" data-toggle="tooltip"><span class="fa fa-eye"></span></a>';
