@@ -41,6 +41,12 @@ $authenticated = isset($_SESSION['user']);
                         } ?>
                     </div>
                     <?php
+                    $dayNum = date('N');
+                    if ($dayNum == 7) {
+                        $dayNum = 1;
+                    } else {
+                        $dayNum++;
+                    }
                     // Include config file
                     require_once "config.php";
                     $currentTime = intval(date('Hi'));
@@ -62,7 +68,7 @@ $authenticated = isset($_SESSION['user']);
                                 echo "<tbody>";
                                 $WeekDays = array("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday");
                                 while($row = mysqli_fetch_array($result)){
-                                    $currentlyOpen = ($currentTime >= $row['begintime'] && $currentTime <= $row['endtime']) ? "style='font-weight:bold'" : "";
+                                    $currentlyOpen = ($dayNum == $row['dayofweek'] && $currentTime >= $row['begintime'] && $currentTime <= $row['endtime']) ? "style='font-weight:bold'" : "";
                                     echo "<tr>";
                                         echo "<td $currentlyOpen>" . $row['l-name'] . "</td>";
                                         echo "<td $currentlyOpen>" . $WeekDays[$row['dayofweek']-1] . "</td>";

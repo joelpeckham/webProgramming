@@ -1,6 +1,6 @@
 <?php
     session_start();
-    $loginFailed = false;
+    $loginFailed = "";
     use PHPMailer\PHPMailer\PHPMailer;
     $back = isset($_SESSION['returnFile']) ? $_SESSION['returnFile'] : "index.php";
     if(isset($_SESSION['user'])){
@@ -27,11 +27,25 @@
         if($mail->smtpConnect()){
             $mail->smtpClose();
            // set session variables
-            $_SESSION['user'] = $_POST['email'];
-            header("Location: $back");
+           //strip out the @southern.edu
+            $username = explode("@", $_POST['email'])[0];
+            //Verify that user exists in admin table
+            require('config.php');
+            $sql = "SELECT * FROM `admin` WHERE `administrator` = '$username'";
+            echo $sql;
+            $result = mysqli_query($link, $sql);
+            if($result && mysqli_num_rows($result) > 0){
+                $row = mysqli_fetch_assoc($result);
+                $_SESSION['userName'] = $row['fullname'];
+                $_SESSION['user'] = $row['administrator'];
+                header("Location: $back");
+            }
+            else{
+                $loginFailed = "User not administrator.";
+            }
         }
         else{
-            $loginFailed = true;
+            $loginFailed = "Username or password incorrect.";
         }
     }
 
@@ -61,17 +75,17 @@
             <div class="card-body">
                 <form action="login.php" method="POST">
                     <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" name="email" class="form-control" id="email" placeholder="Enter username">
+                        <label for="email">Southern Email</label>
+                        <input type="email" name="email" class="form-control" id="email" placeholder="jdoe@southern.edu">
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" name="password" class="form-control" id="password" placeholder="Enter password">
+                        <input type="password" name="password" class="form-control" id="password" placeholder="SouthernPassword">
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
                     <?php
-                        if($loginFailed){
-                            echo "<p class='text-danger'>Login failed</p>";
+                        if($loginFailed != ""){
+                            echo "<p class='text-danger'>$loginFailed</p>";
                         }
                     ?>
                 </form>

@@ -25,7 +25,7 @@
     </script>
     <?php 
     if(isset($_SESSION['user'])) {
-        echo "<a class='nav-link'>".$_SESSION['user']."</a>";
+        echo "<a class='nav-link'>".$_SESSION['userName']."</a>";
         echo '<a role="button" class="btn btn-outline-primary my-2 my-sm-0" href="/jpeckham/HW15/logout.php">Logout</a>';
     }
     else{
