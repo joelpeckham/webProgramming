@@ -18,9 +18,6 @@ $authenticated = isset($_SESSION['user']);
             max-width: 800px;
             margin: 0 auto;
         }
-        table tr td:last-child{
-            width: 120px;
-        }
     </style>
     <script>
         $(document).ready(function(){
